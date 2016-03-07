@@ -7,8 +7,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/wendyi/logrus"
 )
 
 //FilePath represents the absolute path of an added file
@@ -32,18 +33,20 @@ type GitRepo struct {
 //RepoLocatedAt returns a new GitRepo with it's root located at the location specified by the argument.
 //If the argument is not an absolute path, it will be turned into one.
 func RepoLocatedAt(path string) GitRepo {
+	fmt.Println(path)
 	absoluteRoot, _ := filepath.Abs(path)
 	return GitRepo{absoluteRoot}
 }
 
 //AllAdditions returns all the outgoing additions and modifications in a GitRepo. This does not include files that were deleted.
-func (repo GitRepo) AllAdditions() []Addition {
-	return repo.Additions("origin/master", "master")
+func (repo GitRepo) AllAdditions(path string) []Addition {
+	return repo.Additions("origin/master", "master", path)
 }
 
 //Additions returns the outgoing additions and modifications in a GitRepo that are in the given commit range. This does not include files that were deleted.
-func (repo GitRepo) Additions(oldCommit string, newCommit string) []Addition {
-	files := repo.outgoingNonDeletedFiles(oldCommit, newCommit)
+func (repo GitRepo) Additions(oldCommit string, newCommit string, path string) []Addition {
+	fmt.Println("Additions")
+	files := repo.outgoingNonDeletedFiles(oldCommit, newCommit, path)
 	result := make([]Addition, len(files))
 	for i, file := range files {
 		data, _ := repo.ReadRepoFile(file)
@@ -54,6 +57,7 @@ func (repo GitRepo) Additions(oldCommit string, newCommit string) []Addition {
 		"newCommit": newCommit,
 		"additions": result,
 	}).Info("Generating all additions in range.")
+	fmt.Printf("%d", len(result))
 	return result
 }
 
@@ -102,8 +106,9 @@ func (a Addition) Matches(pattern string) bool {
 	return result
 }
 
-func (repo GitRepo) outgoingNonDeletedFiles(oldCommit, newCommit string) []string {
-	allChanges := strings.Split(repo.fetchRawOutgoingDiff(oldCommit, newCommit), "\n")
+func (repo GitRepo) outgoingNonDeletedFiles(oldCommit, newCommit string, path string) []string {
+	fmt.Println("outgoingNonDeletedFiles")
+	allChanges := strings.Split(repo.fetchRawOutgoingDiff(oldCommit, newCommit, path), "\n")
 	var result []string
 	for _, c := range allChanges {
 		if len(c) != 0 {
@@ -113,12 +118,14 @@ func (repo GitRepo) outgoingNonDeletedFiles(oldCommit, newCommit string) []strin
 	return result
 }
 
-func (repo GitRepo) fetchRawOutgoingDiff(oldCommit string, newCommit string) string {
+func (repo GitRepo) fetchRawOutgoingDiff(oldCommit string, newCommit string, path string) string {
+	fmt.Println("fetchRawOutgoingDiff")
 	gitRange := oldCommit + ".." + newCommit
-	return string(repo.executeRepoCommand("git", "diff", gitRange, "--name-only", "--diff-filter=ACM"))
+	return string(repo.executeRepoCommand("git", "diff", gitRange, "--name-only", "--diff-filter=ACM", path))
 }
 
 func (repo GitRepo) executeRepoCommand(commandName string, args ...string) []byte {
+	fmt.Println("executeRepoCommand")
 	log.WithFields(log.Fields{
 		"command": commandName,
 		"args":    args,

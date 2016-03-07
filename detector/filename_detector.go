@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/thoughtworks/talisman/git_repo"
+	log "github.com/wendyi/logrus"
+	"github.com/wendyi/talisman/git_repo"
 )
 
 //FileNameDetector represents tests performed against the fileName of the Additions.
@@ -77,7 +77,9 @@ func NewFileNameDetector(patternStrings ...string) Detector {
 
 //Test tests the fileNames of the Additions to ensure that they don't look suspicious
 func (fd FileNameDetector) Test(additions []git_repo.Addition, ignores Ignores, result *DetectionResults) {
+	fmt.Println("Test")
 	for _, addition := range additions {
+		fmt.Println(addition.Path)
 		if ignores.Deny(addition) {
 			log.WithFields(log.Fields{
 				"filePath": addition.Path,

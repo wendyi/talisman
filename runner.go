@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/thoughtworks/talisman/detector"
-	"github.com/thoughtworks/talisman/git_repo"
+	log "github.com/wendyi/logrus"
+	"github.com/wendyi/talisman/detector"
+	"github.com/wendyi/talisman/git_repo"
 )
 
 const (
@@ -36,6 +36,7 @@ func NewRunner(localRef, localCommit, remoteRef, remoteCommit string) *Runner {
 //If the outgoing ref does not exist on the remote, all commits on the local ref will be checked
 //If the outgoing ref already exists, all additions in the range beween "localSha" and "remoteSha" will be validated
 func (r *Runner) RunWithoutErrors() int {
+	fmt.Println("RunWithoutErrors")
 	if r.runningOnDeletedRef() {
 		log.WithFields(log.Fields{
 			"localRef":     r.localRef,
@@ -62,6 +63,7 @@ func (r *Runner) checkAllCommitsInNewRef() int {
 }
 
 func (r *Runner) checkAllCommitsInRange() int {
+	fmt.Println("checkAllCommitsInRange")
 	log.WithFields(log.Fields{
 		"localRef":     r.localRef,
 		"localCommit":  r.localCommit,
@@ -94,7 +96,7 @@ func (r *Runner) exitStatus() int {
 func (r *Runner) getRepoAdditions() []git_repo.Addition {
 	wd, _ := os.Getwd()
 	repo := git_repo.RepoLocatedAt(wd)
-	return repo.Additions(r.remoteCommit, r.localCommit)
+	return repo.Additions(r.remoteCommit, r.localCommit, wd)
 }
 
 func (r *Runner) runningOnDeletedRef() bool {
